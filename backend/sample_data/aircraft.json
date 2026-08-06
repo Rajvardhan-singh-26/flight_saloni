@@ -1,0 +1,93 @@
+[
+  {
+    "id": "citation-cj3",
+    "name": "Citation CJ3+",
+    "manufacturer": "Cessna",
+    "category": "Light Jet",
+    "hourly_rate": 3200,
+    "max_passengers": 7,
+    "max_range_nm": 2040,
+    "cruise_speed_kt": 416,
+    "image": "/aircraft/citation-cj3.jpg",
+    "accent": "#1f4e8f",
+    "description": "A nimble light jet prized for short runway performance and efficient regional travel, ideal for quick business hops."
+  },
+  {
+    "id": "hawker-900xp",
+    "name": "Hawker 900XP",
+    "manufacturer": "Hawker Beechcraft",
+    "category": "Midsize Jet",
+    "hourly_rate": 4500,
+    "max_passengers": 9,
+    "max_range_nm": 2930,
+    "cruise_speed_kt": 448,
+    "image": "/aircraft/hawker-900xp.jpg",
+    "accent": "#2d67b2",
+    "description": "A proven midsize workhorse with transatlantic-capable range, a stand-up cabin, and excellent operating economics."
+  },
+  {
+    "id": "king-air-350",
+    "name": "King Air 350i",
+    "manufacturer": "Beechcraft",
+    "category": "Turboprop",
+    "hourly_rate": 2600,
+    "max_passengers": 9,
+    "max_range_nm": 1806,
+    "cruise_speed_kt": 312,
+    "image": "/aircraft/king-air-350.jpg",
+    "accent": "#4a7ab5",
+    "description": "A rugged, versatile turboprop capable of accessing shorter and unpaved runways while offering executive comfort."
+  },
+  {
+    "id": "challenger-350",
+    "name": "Challenger 350",
+    "manufacturer": "Bombardier",
+    "category": "Super Midsize Jet",
+    "hourly_rate": 6800,
+    "max_passengers": 10,
+    "max_range_nm": 3200,
+    "cruise_speed_kt": 470,
+    "image": "/aircraft/challenger-350.jpg",
+    "accent": "#163e75",
+    "description": "Renowned for its smooth ride and wide-cabin comfort, the Challenger 350 is a favorite among discerning charter clients."
+  },
+  {
+    "id": "legacy-650",
+    "name": "Legacy 650E",
+    "manufacturer": "Embraer",
+    "category": "Heavy Jet",
+    "hourly_rate": 7900,
+    "max_passengers": 13,
+    "max_range_nm": 3900,
+    "cruise_speed_kt": 459,
+    "image": "/aircraft/legacy-650.jpg",
+    "accent": "#24549a",
+    "description": "A spacious heavy jet offering a three-zone cabin, intercontinental range, and airline-level cabin comfort."
+  },
+  {
+    "id": "falcon-2000",
+    "name": "Falcon 2000LXS",
+    "manufacturer": "Dassault",
+    "category": "Heavy Jet",
+    "hourly_rate": 8500,
+    "max_passengers": 10,
+    "max_range_nm": 4000,
+    "cruise_speed_kt": 482,
+    "image": "/aircraft/falcon-2000.jpg",
+    "accent": "#0d3264",
+    "description": "A large-cabin, long-range jet with exceptional short-field capability, built for demanding intercontinental missions."
+  },
+  {
+    "id": "gulfstream-g650",
+    "name": "Gulfstream G650ER",
+    "manufacturer": "Gulfstream",
+    "category": "Ultra Long Range",
+    "hourly_rate": 11500,
+    "max_passengers": 14,
+    "max_range_nm": 7500,
+    "cruise_speed_kt": 516,
+    "image": "/aircraft/gulfstream-g650.jpg",
+    "accent": "#06387a",
+    "description": "The pinnacle of private aviation — non-stop intercontinental range paired with an ultra-quiet, opulent cabin."
+  }
+]
