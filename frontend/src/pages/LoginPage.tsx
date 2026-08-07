@@ -51,7 +51,7 @@ export default function LoginPage() {
         );
       } else if (res.status === 403) {
         setPending(res.data?.detail || 'Your account is awaiting approval by a sales executive.');
-      } else if (res.status >= 500) {
+      } else if ((res.status ?? 0) >= 500) {
         setError(res.data?.detail || 'The server hit an error. Check the backend logs.');
       } else {
         setError(res.data?.detail || 'Invalid email or password.');
