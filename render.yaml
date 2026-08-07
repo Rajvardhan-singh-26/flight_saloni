@@ -14,8 +14,11 @@ services:
     startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /api/health
     envVars:
+      # Must match .python-version at the repo root. Render otherwise defaults
+      # to the newest Python, and 3.14 has no prebuilt pydantic-core wheel —
+      # pip then tries to compile it from Rust source and the build fails.
       - key: PYTHON_VERSION
-        value: "3.12"
+        value: "3.12.8"
       # Secrets are left unset here on purpose — add them in the Render
       # dashboard (Environment) so they never live in the repo.
       - key: SUPABASE_URL
