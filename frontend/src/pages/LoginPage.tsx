@@ -42,10 +42,19 @@ export default function LoginPage() {
       navigate(from, { replace: true });
     } catch (err) {
       const res = (err as { response?: { status?: number; data?: { detail?: string } } })?.response;
-      if (res?.status === 403) {
+      if (!res) {
+        // No response at all — the request never completed. Reporting this as
+        // "invalid password" would send people hunting for the wrong problem.
+        setError(
+          'Could not reach the server. It may be starting up (free hosting sleeps when idle) — ' +
+            'wait a minute and try again.',
+        );
+      } else if (res.status === 403) {
         setPending(res.data?.detail || 'Your account is awaiting approval by a sales executive.');
+      } else if (res.status >= 500) {
+        setError(res.data?.detail || 'The server hit an error. Check the backend logs.');
       } else {
-        setError(res?.data?.detail || 'Invalid email or password.');
+        setError(res.data?.detail || 'Invalid email or password.');
       }
     } finally {
       setLoading(false);

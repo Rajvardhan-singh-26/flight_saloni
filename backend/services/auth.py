@@ -79,8 +79,16 @@ def ensure_admin_seeded() -> None:
     try:
         existing = client.table("profiles").select("*").eq("email", email).limit(1).execute()
         if existing.data:
-            # Make sure the seeded account stays usable as an approver.
+            # Keep the bootstrap account usable as an approver...
             client.table("profiles").update({"role": "admin", "approved": True}).eq("email", email).execute()
+            # ...and keep SALES_PASSWORD authoritative. Supabase Auth stores
+            # the password set when the user was created, so without this a
+            # changed SALES_PASSWORD is silently ignored and the admin is
+            # locked out with a confusing "invalid password".
+            try:
+                client.auth.admin.update_user_by_id(existing.data[0]["id"], {"password": password})
+            except Exception:
+                logger.exception("Could not sync the admin password from SALES_PASSWORD")
             _admin_seeded = True
             return
 
@@ -90,6 +98,10 @@ def ensure_admin_seeded() -> None:
                 {"email": email, "password": password, "email_confirm": True}
             )
             auth_user = created.user
+        else:
+            # Auth user exists but has no profile — reset to the configured
+            # password so the two can't drift apart.
+            client.auth.admin.update_user_by_id(str(auth_user.id), {"password": password})
 
         client.table("profiles").upsert(
             {
