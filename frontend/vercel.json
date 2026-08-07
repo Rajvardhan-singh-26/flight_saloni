@@ -3,11 +3,5 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "rewrites": [
-    {
-      "comment": "SPA fallback — React Router owns the routes, so deep links like /customers or /aircraft/citation-cj3 must return index.html instead of a 404.",
-      "source": "/((?!assets/|aircraft/|favicon\\.svg).*)",
-      "destination": "/index.html"
-    }
-  ]
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
