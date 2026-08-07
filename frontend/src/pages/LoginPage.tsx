@@ -12,7 +12,7 @@ import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import LoginIcon from '@mui/icons-material/Login';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import BrandLogo from '../components/BrandLogo';
 import { login } from '../api/client';
 import { GOLD } from '../theme';
@@ -22,6 +22,8 @@ const MotionBox = motion.create(Box);
 /** Salesperson sign-in. Credentials are validated by the backend against .env. */
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as { from?: { pathname: string } } | null)?.from?.pathname || '/quote';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +35,7 @@ export default function LoginPage() {
     setError(null);
     try {
       await login(email, password);
-      navigate('/quote');
+      navigate(from, { replace: true });
     } catch {
       setError('Invalid email or password.');
     } finally {

@@ -28,7 +28,18 @@ export default function PdfViewerDialog({ open, blobUrl, quoteId, onClose }: Pro
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth slotProps={{ paper: { sx: { height: '92vh', borderRadius: 3 } } }}>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      slotProps={{
+        // overflow: hidden clips every child (header bar, iframe) to these
+        // rounded corners consistently — without it, the embedded PDF
+        // viewer's own square edges can visually poke past the curve.
+        paper: { sx: { height: '92vh', borderRadius: 3, overflow: 'hidden' } },
+      }}
+    >
       <Box
         sx={{
           bgcolor: NAVY,

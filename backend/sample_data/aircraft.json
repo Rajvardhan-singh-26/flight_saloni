@@ -4,13 +4,23 @@
     "name": "Citation CJ3+",
     "manufacturer": "Cessna",
     "category": "Light Jet",
-    "hourly_rate": 3200,
+    "hourly_rate": 3200.0,
     "max_passengers": 7,
     "max_range_nm": 2040,
     "cruise_speed_kt": 416,
-    "image": "/aircraft/citation-cj3.jpg",
+    "image": "/aircraft/gallery/citation-cj3-b805d628.jpg",
     "accent": "#1f4e8f",
-    "description": "A nimble light jet prized for short runway performance and efficient regional travel, ideal for quick business hops."
+    "description": "A nimble light jet prized for short runway performance and efficient regional travel, ideal for quick business hops.",
+    "gallery": [
+      {
+        "url": "/aircraft/gallery/citation-cj3-f853ff82.jpg",
+        "caption": ""
+      },
+      {
+        "url": "/aircraft/gallery/citation-cj3-f8b3672d.jpg",
+        "caption": ""
+      }
+    ]
   },
   {
     "id": "hawker-900xp",
@@ -23,7 +33,8 @@
     "cruise_speed_kt": 448,
     "image": "/aircraft/hawker-900xp.jpg",
     "accent": "#2d67b2",
-    "description": "A proven midsize workhorse with transatlantic-capable range, a stand-up cabin, and excellent operating economics."
+    "description": "A proven midsize workhorse with transatlantic-capable range, a stand-up cabin, and excellent operating economics.",
+    "gallery": []
   },
   {
     "id": "king-air-350",
@@ -36,7 +47,8 @@
     "cruise_speed_kt": 312,
     "image": "/aircraft/king-air-350.jpg",
     "accent": "#4a7ab5",
-    "description": "A rugged, versatile turboprop capable of accessing shorter and unpaved runways while offering executive comfort."
+    "description": "A rugged, versatile turboprop capable of accessing shorter and unpaved runways while offering executive comfort.",
+    "gallery": []
   },
   {
     "id": "challenger-350",
@@ -49,7 +61,8 @@
     "cruise_speed_kt": 470,
     "image": "/aircraft/challenger-350.jpg",
     "accent": "#163e75",
-    "description": "Renowned for its smooth ride and wide-cabin comfort, the Challenger 350 is a favorite among discerning charter clients."
+    "description": "Renowned for its smooth ride and wide-cabin comfort, the Challenger 350 is a favorite among discerning charter clients.",
+    "gallery": []
   },
   {
     "id": "legacy-650",
@@ -62,7 +75,8 @@
     "cruise_speed_kt": 459,
     "image": "/aircraft/legacy-650.jpg",
     "accent": "#24549a",
-    "description": "A spacious heavy jet offering a three-zone cabin, intercontinental range, and airline-level cabin comfort."
+    "description": "A spacious heavy jet offering a three-zone cabin, intercontinental range, and airline-level cabin comfort.",
+    "gallery": []
   },
   {
     "id": "falcon-2000",
@@ -75,7 +89,8 @@
     "cruise_speed_kt": 482,
     "image": "/aircraft/falcon-2000.jpg",
     "accent": "#0d3264",
-    "description": "A large-cabin, long-range jet with exceptional short-field capability, built for demanding intercontinental missions."
+    "description": "A large-cabin, long-range jet with exceptional short-field capability, built for demanding intercontinental missions.",
+    "gallery": []
   },
   {
     "id": "gulfstream-g650",
@@ -88,6 +103,7 @@
     "cruise_speed_kt": 516,
     "image": "/aircraft/gulfstream-g650.jpg",
     "accent": "#06387a",
-    "description": "The pinnacle of private aviation — non-stop intercontinental range paired with an ultra-quiet, opulent cabin."
+    "description": "The pinnacle of private aviation — non-stop intercontinental range paired with an ultra-quiet, opulent cabin.",
+    "gallery": []
   }
 ]

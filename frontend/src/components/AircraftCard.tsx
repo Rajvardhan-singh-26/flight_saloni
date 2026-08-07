@@ -1,5 +1,6 @@
 import { Box, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { useLocation, useNavigate } from 'react-router-dom';
 import type { Aircraft } from '../types';
 import { formatMoney } from '../hooks/usePricing';
 import { GOLD, LINK_BLUE, SERIF } from '../theme';
@@ -13,6 +14,8 @@ interface Props {
 
 /** Photo card from the design: image, gold category, serif name, specs line, rate, view-details link. */
 export default function AircraftCard({ aircraft, selected, onSelect, currency = 'USD' }: Props) {
+  const navigate = useNavigate();
+  const location = useLocation();
   return (
     <Box
       onClick={() => onSelect(aircraft)}
@@ -56,7 +59,25 @@ export default function AircraftCard({ aircraft, selected, onSelect, currency = 
             /hr
           </Box>
         </Typography>
-        <Typography sx={{ fontSize: 12.5, color: LINK_BLUE, mt: 0.6, fontWeight: 500 }}>View details →</Typography>
+        <Typography
+          onClick={(e) => {
+            e.stopPropagation();
+            // backgroundLocation keeps this quote page mounted behind the
+            // popup, so its form state survives and shows through the scrim.
+            navigate(`/aircraft/${aircraft.id}`, { state: { backgroundLocation: location } });
+          }}
+          sx={{
+            fontSize: 12.5,
+            color: LINK_BLUE,
+            mt: 0.6,
+            fontWeight: 500,
+            cursor: 'pointer',
+            width: 'fit-content',
+            '&:hover': { textDecoration: 'underline' },
+          }}
+        >
+          View details →
+        </Typography>
       </Box>
     </Box>
   );

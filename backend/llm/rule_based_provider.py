@@ -45,6 +45,9 @@ class RuleBasedProvider(LLMProvider):
     async def extract(self, text: str) -> AIExtractionResult:
         return AIExtractionResult(
             customer_name=self._extract_customer_name(text),
+            company=self._extract_company(text),
+            phone=self._extract_phone(text),
+            email=self._extract_email(text),
             departure_airport=self._extract_route(text)[0],
             arrival_airport=self._extract_route(text)[1],
             departure_date=self._extract_date(text),
@@ -53,6 +56,42 @@ class RuleBasedProvider(LLMProvider):
             flight_hours=self._extract_hours(text),
             raw_notes=text.strip(),
         )
+
+    @staticmethod
+    def _extract_email(text: str) -> str | None:
+        m = re.search(r"[\w.+-]+@[\w-]+\.[\w.-]+", text)
+        return m.group(0).rstrip(".,;") if m else None
+
+    @staticmethod
+    def _extract_phone(text: str) -> str | None:
+        # Optional +country code, then 7-15 digits allowing spaces/dashes/parens.
+        m = re.search(r"(\+?\d[\d\s\-()]{6,18}\d)", text)
+        if not m:
+            return None
+        candidate = m.group(1).strip().rstrip(".,;")
+        # Reject matches that are really just a long run of digits from
+        # something else (e.g. a range in nm) — real numbers have 7+ digits.
+        if len(re.sub(r"\D", "", candidate)) < 7:
+            return None
+        return candidate
+
+    @staticmethod
+    def _extract_company(text: str) -> str | None:
+        m = re.search(
+            r"\b(?:company|organisation|organization|firm|corporate account)\s*(?:name)?\s*[:\-]?\s*"
+            r"([A-Z][\w&.'-]*(?:\s+[A-Z][\w&.'-]*)*)",
+            text,
+        )
+        if m:
+            return m.group(1).strip().rstrip(".,;:")
+        # "... from Acme Industries", "... at Acme Corp" — match a capitalised
+        # phrase ending in a common company suffix.
+        m = re.search(
+            r"\b([A-Z][\w&.'-]*(?:\s+[A-Z][\w&.'-]*)*\s+"
+            r"(?:Industries|Corp|Corporation|Inc|Ltd|LLC|LLP|Limited|Holdings|Group|Ventures|Partners|Technologies|Aviation))\b",
+            text,
+        )
+        return m.group(1).strip().rstrip(".,;:") if m else None
 
     @staticmethod
     def _extract_customer_name(text: str) -> str | None:

@@ -58,7 +58,8 @@ def _parse_extraction(raw: str, original_text: str) -> AIExtractionResult:
     data = json.loads(cleaned[start : end + 1])
 
     allowed = {
-        "customer_name", "departure_airport", "arrival_airport",
+        "customer_name", "company", "phone", "email",
+        "departure_airport", "arrival_airport",
         "departure_date", "passengers", "aircraft_category", "flight_hours",
     }
     fields: dict = {k: v for k, v in data.items() if k in allowed}

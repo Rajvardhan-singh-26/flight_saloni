@@ -7,6 +7,11 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr, Field
 
 
+class GalleryImage(BaseModel):
+    url: str
+    caption: str = ""
+
+
 class Aircraft(BaseModel):
     id: str
     name: str
@@ -19,6 +24,38 @@ class Aircraft(BaseModel):
     image: str
     accent: str
     description: str
+    gallery: list[GalleryImage] = Field(default_factory=list)
+
+
+class AircraftUpdateRequest(BaseModel):
+    name: Optional[str] = None
+    manufacturer: Optional[str] = None
+    category: Optional[str] = None
+    hourly_rate: Optional[float] = None
+    max_passengers: Optional[int] = None
+    max_range_nm: Optional[int] = None
+    cruise_speed_kt: Optional[int] = None
+    description: Optional[str] = None
+    image: Optional[str] = None
+    gallery: Optional[list[GalleryImage]] = None
+
+
+class AircraftCreateRequest(BaseModel):
+    name: str
+    manufacturer: str = ""
+    category: str = ""
+    hourly_rate: float = 0
+    max_passengers: int = 1
+    max_range_nm: int = 0
+    cruise_speed_kt: int = 0
+    description: str = ""
+    image: str = ""
+    accent: str = "#2d67b2"
+    gallery: list[GalleryImage] = Field(default_factory=list)
+
+
+class AircraftImageUploadResponse(BaseModel):
+    path: str
 
 
 class CustomerInfo(BaseModel):
@@ -54,6 +91,8 @@ class QuoteRequest(BaseModel):
     charges: Charges
     aircraft_id: Optional[str] = None
     notes: str = ""
+    terms: Optional[str] = None
+    prepared_by: Optional[str] = None
 
 
 class PricingBreakdown(BaseModel):
@@ -74,6 +113,9 @@ class AIExtractionRequest(BaseModel):
 
 class AIExtractionResult(BaseModel):
     customer_name: Optional[str] = None
+    company: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
     departure_airport: Optional[str] = None
     arrival_airport: Optional[str] = None
     departure_date: Optional[str] = None
@@ -98,3 +140,45 @@ class LoginResponse(BaseModel):
     name: str
     email: str
     role: str = "sales"
+
+
+class CustomerRecord(BaseModel):
+    id: str
+    name: str
+    company: str = ""
+    phone: str = ""
+    email: str = ""
+    status: str = "New"
+    quote_count: int = 0
+    total_value: float = 0
+    currency: str = "USD"
+    last_quote_date: str = ""
+
+
+class CustomerUpdateRequest(BaseModel):
+    name: Optional[str] = None
+    company: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    status: Optional[str] = None
+    quote_count: Optional[int] = None
+    total_value: Optional[float] = None
+    currency: Optional[str] = None
+    last_quote_date: Optional[str] = None
+
+
+class CustomerCreateRequest(BaseModel):
+    """Adding a customer by hand from the Customers page, with no quote behind it."""
+    name: str
+    company: str = ""
+    phone: str = ""
+    email: str = ""
+    status: str = "New"
+
+
+class CustomerFromQuoteRequest(BaseModel):
+    """Explicitly add the customer behind a just-generated quote to the
+    directory — the salesperson opts in from the quote page."""
+    customer: CustomerInfo
+    total_value: float = 0
+    currency: str = "USD"

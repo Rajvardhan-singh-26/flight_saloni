@@ -1,5 +1,10 @@
 /** Shared domain types mirroring the backend Pydantic models. */
 
+export interface GalleryImage {
+  url: string;
+  caption: string;
+}
+
 export interface Aircraft {
   id: string;
   name: string;
@@ -12,6 +17,7 @@ export interface Aircraft {
   image: string;
   accent: string;
   description: string;
+  gallery: GalleryImage[];
 }
 
 export interface QuoteFormValues {
@@ -34,6 +40,7 @@ export interface QuoteFormValues {
   discount: number;
   currency: string;
   notes: string;
+  termsAndConditions: string;
 }
 
 export interface PricingBreakdown {
@@ -48,8 +55,27 @@ export interface PricingBreakdown {
   grandTotal: number;
 }
 
+export interface Customer {
+  id: string;
+  name: string;
+  company: string;
+  phone: string;
+  email: string;
+  status: string;
+  quote_count: number;
+  /** Total business done — summed grand totals of this customer's quotes. */
+  total_value: number;
+  currency: string;
+  last_quote_date: string;
+}
+
+export const CUSTOMER_STATUSES = ['New', 'Contacted', 'Quoted', 'Confirmed', 'Lost'] as const;
+
 export interface AIExtractionResult {
   customer_name: string | null;
+  company: string | null;
+  phone: string | null;
+  email: string | null;
   departure_airport: string | null;
   arrival_airport: string | null;
   departure_date: string | null;
@@ -58,6 +84,8 @@ export interface AIExtractionResult {
   flight_hours: number | null;
   raw_notes: string | null;
 }
+
+export const MAX_GALLERY_IMAGES = 4;
 
 export const AIRCRAFT_CATEGORIES = [
   'Light Jet',
@@ -77,6 +105,14 @@ export const CURRENCIES = [
   { code: 'AED', symbol: 'د.إ', label: 'UAE Dirham' },
   { code: 'SGD', symbol: 'S$', label: 'Singapore Dollar' },
 ] as const;
+
+export const DEFAULT_TERMS_AND_CONDITIONS = [
+  'This quotation is valid for 72 hours from the date of issue.',
+  'A 50% deposit is required upon confirmation of booking.',
+  'Pricing is subject to change based on fuel price fluctuations beyond ±5%.',
+  'Cancellation within 24 hours of departure is non-refundable.',
+  'All prices are exclusive of applicable government fees and airport charges unless stated.',
+].join('\n');
 
 export const DEFAULT_FORM_VALUES: QuoteFormValues = {
   customerName: '',
@@ -98,4 +134,5 @@ export const DEFAULT_FORM_VALUES: QuoteFormValues = {
   discount: 0,
   currency: 'USD',
   notes: '',
+  termsAndConditions: DEFAULT_TERMS_AND_CONDITIONS,
 };

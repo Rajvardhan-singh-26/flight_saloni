@@ -1,10 +1,12 @@
-import { Box, MenuItem, TextField, Typography } from '@mui/material';
+import { Box, Button, MenuItem, TextField, Typography } from '@mui/material';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import FlightTakeoffIcon from '@mui/icons-material/FlightTakeoff';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import GavelOutlinedIcon from '@mui/icons-material/GavelOutlined';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { Controller, useWatch, type Control } from 'react-hook-form';
 import type { QuoteFormValues } from '../types';
-import { AIRCRAFT_CATEGORIES, CURRENCIES } from '../types';
+import { AIRCRAFT_CATEGORIES, CURRENCIES, DEFAULT_TERMS_AND_CONDITIONS } from '../types';
 import { cardSx, GOLD, SERIF } from '../theme';
 
 interface CardProps {
@@ -95,6 +97,33 @@ export function PricingCard({ control }: CardProps) {
       <Field control={control} name="discount" label={`Discount (${symbol})`} type="number" />
       <Field control={control} name="hourlyRate" label={`Hourly Rate (${symbol})`} type="number" />
       <Field control={control} name="gstPercent" label="Taxes & Levies (%)" type="number" />
+    </SectionCard>
+  );
+}
+
+/** "Terms & Conditions" card — freeform, one term per line, printed as a numbered list in the PDF. */
+export function TermsCard({ control }: CardProps) {
+  return (
+    <SectionCard icon={<GavelOutlinedIcon />} title="Terms & Conditions">
+      <Controller
+        control={control}
+        name="termsAndConditions"
+        render={({ field }) => (
+          <Box sx={{ gridColumn: { sm: '1 / -1' } }}>
+            <LabeledInput label="One term per line — numbered automatically in the quotation">
+              <TextField {...field} multiline minRows={5} fullWidth size="small" />
+            </LabeledInput>
+            <Button
+              onClick={() => field.onChange(DEFAULT_TERMS_AND_CONDITIONS)}
+              startIcon={<RestartAltIcon sx={{ fontSize: 16 }} />}
+              size="small"
+              sx={{ mt: 1, color: 'text.secondary', fontSize: 12.5 }}
+            >
+              Reset to default terms
+            </Button>
+          </Box>
+        )}
+      />
     </SectionCard>
   );
 }

@@ -22,6 +22,9 @@ company. Extract structured booking details from the customer's free-form reques
 
 Return ONLY a JSON object with these exact keys (use null for anything not mentioned):
 - customer_name (string)
+- company (string, the client's company/organisation name)
+- phone (string, contact phone number exactly as written)
+- email (string, contact email address)
 - departure_airport (string, city or airport name)
 - arrival_airport (string, city or airport name)
 - departure_date (string, formatted YYYY-MM-DD if a year is inferable, otherwise as written)

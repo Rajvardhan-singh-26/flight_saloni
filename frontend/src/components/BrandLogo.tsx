@@ -5,10 +5,12 @@ import { GOLD, SERIF } from '../theme';
 interface Props {
   light?: boolean;
   compact?: boolean;
+  /** Show only the plane badge, for the collapsed sidebar rail. */
+  iconOnly?: boolean;
 }
 
 /** Serif wordmark: "CAREWELL" + gold "AVIATION", with the gold plane badge from the design. */
-export default function BrandLogo({ light = false, compact = false }: Props) {
+export default function BrandLogo({ light = false, compact = false, iconOnly = false }: Props) {
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.3 }}>
       <Box
@@ -25,21 +27,24 @@ export default function BrandLogo({ light = false, compact = false }: Props) {
       >
         <FlightIcon sx={{ fontSize: compact ? 17 : 20, color: GOLD, transform: 'rotate(45deg)' }} />
       </Box>
-      <Typography
-        sx={{
-          fontFamily: SERIF,
-          fontWeight: 700,
-          fontSize: compact ? 19 : 22,
-          letterSpacing: 1.4,
-          lineHeight: 1,
-          color: light ? '#fff' : 'primary.main',
-        }}
-      >
-        CAREWELL{' '}
-        <Box component="span" sx={{ color: GOLD }}>
-          AVN
-        </Box>
-      </Typography>
+      {!iconOnly && (
+        <Typography
+          sx={{
+            fontFamily: SERIF,
+            fontWeight: 700,
+            fontSize: compact ? 19 : 22,
+            letterSpacing: 1.4,
+            lineHeight: 1,
+            whiteSpace: 'nowrap',
+            color: light ? '#fff' : 'primary.main',
+          }}
+        >
+          CAREWELL{' '}
+          <Box component="span" sx={{ color: GOLD }}>
+            AVN
+          </Box>
+        </Typography>
+      )}
     </Box>
   );
 }
