@@ -85,10 +85,8 @@ def ensure_admin_seeded() -> None:
             # the password set when the user was created, so without this a
             # changed SALES_PASSWORD is silently ignored and the admin is
             # locked out with a confusing "invalid password".
-            try:
-                client.auth.admin.update_user_by_id(existing.data[0]["id"], {"password": password})
-            except Exception:
-                logger.exception("Could not sync the admin password from SALES_PASSWORD")
+            client.auth.admin.update_user_by_id(existing.data[0]["id"], {"password": password})
+            logger.info("Admin %s already existed — role/approval confirmed and password synced", email)
             _admin_seeded = True
             return
 
@@ -115,7 +113,7 @@ def ensure_admin_seeded() -> None:
                 "approved_by": "system",
             }
         ).execute()
-        logger.info("Seeded admin account %s", email)
+        logger.info("Created new admin account %s", email)
         _admin_seeded = True
     except Exception:
         # Deliberately do NOT set _admin_seeded here: a transient failure
@@ -175,6 +173,13 @@ def authenticate(email: str, password: str) -> LoginResponse:
     try:
         new_client().auth.sign_in_with_password({"email": email, "password": password})
     except Exception as exc:  # noqa: BLE001 - never leak which half was wrong
+        # Log (server-side only) which accounts do exist. A mismatched
+        # SALES_EMAIL is otherwise indistinguishable from a wrong password.
+        try:
+            known = [r["email"] for r in get_client().table("profiles").select("email").execute().data or []]
+            logger.warning("Failed login for %r; known accounts: %s", email, known)
+        except Exception:
+            logger.warning("Failed login for %r (could not list known accounts)", email)
         raise AuthError("Invalid email or password.") from exc
 
     client = get_client()
