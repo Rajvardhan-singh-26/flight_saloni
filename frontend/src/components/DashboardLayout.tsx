@@ -8,6 +8,7 @@ import FlightIcon from '@mui/icons-material/Flight';
 import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -15,13 +16,16 @@ import BrandLogo from './BrandLogo';
 import { getSession, logout } from '../api/client';
 import { GOLD, SIDEBAR_BG } from '../theme';
 
+// `soon` marks sections that route to a Coming Soon placeholder rather than a
+// built feature — they still navigate, so the sidebar has no dead ends.
 const NAV_ITEMS = [
-  { label: 'Dashboard', icon: <GridViewOutlinedIcon /> },
+  { label: 'Dashboard', icon: <GridViewOutlinedIcon />, path: '/dashboard', soon: true },
   { label: 'Generate Quote', icon: <AutoAwesomeIcon />, path: '/quote' },
   { label: 'Aircraft', icon: <FlightIcon sx={{ transform: 'rotate(45deg)' }} />, path: '/aircraft' },
   { label: 'Customers', icon: <PeopleAltOutlinedIcon />, path: '/customers' },
-  { label: 'Previous Quotes', icon: <DescriptionOutlinedIcon /> },
-  { label: 'Settings', icon: <SettingsOutlinedIcon /> },
+  { label: 'Previous Quotes', icon: <DescriptionOutlinedIcon />, path: '/previous-quotes', soon: true },
+  { label: 'Team', icon: <GroupsOutlinedIcon />, path: '/team', adminOnly: true },
+  { label: 'Settings', icon: <SettingsOutlinedIcon />, path: '/settings', soon: true },
 ];
 
 const SIDEBAR_WIDTH = 250;
@@ -72,7 +76,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </Box>
 
         <Box sx={{ flex: 1, py: 2, px: collapsed ? 0.8 : 1.5, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-          {NAV_ITEMS.map((item) => {
+          {NAV_ITEMS.filter((item) => !item.adminOnly || session?.role === 'admin').map((item) => {
             // Prefix match so nested routes (e.g. /aircraft/:id with the
             // details popup open) keep their section highlighted.
             const active =
@@ -108,7 +112,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   }}
                 >
                   {item.icon}
-                  {!collapsed && item.label}
+                  {!collapsed && (
+                    <>
+                      {item.label}
+                      {item.soon && (
+                        <Box
+                          component="span"
+                          sx={{
+                            ml: 'auto',
+                            fontSize: 9.5,
+                            fontWeight: 700,
+                            letterSpacing: 0.5,
+                            textTransform: 'uppercase',
+                            color: 'rgba(255,255,255,0.45)',
+                            border: '1px solid rgba(255,255,255,0.18)',
+                            borderRadius: 1,
+                            px: 0.6,
+                            py: '1px',
+                          }}
+                        >
+                          Soon
+                        </Box>
+                      )}
+                    </>
+                  )}
                 </Box>
               </Tooltip>
             );

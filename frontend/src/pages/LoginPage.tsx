@@ -12,14 +12,15 @@ import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import LoginIcon from '@mui/icons-material/Login';
 import { motion } from 'framer-motion';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import BrandLogo from '../components/BrandLogo';
 import { login } from '../api/client';
-import { GOLD } from '../theme';
+import { GOLD, LINK_BLUE } from '../theme';
 
 const MotionBox = motion.create(Box);
 
-/** Salesperson sign-in. Credentials are validated by the backend against .env. */
+/** Salesperson sign-in, backed by Supabase Auth. Accounts must be approved by
+ * a sales executive before they can sign in. */
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -27,17 +28,25 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  // "Awaiting approval" isn't a credentials failure — show it as info, not error.
+  const [pending, setPending] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setPending(null);
     try {
       await login(email, password);
       navigate(from, { replace: true });
-    } catch {
-      setError('Invalid email or password.');
+    } catch (err) {
+      const res = (err as { response?: { status?: number; data?: { detail?: string } } })?.response;
+      if (res?.status === 403) {
+        setPending(res.data?.detail || 'Your account is awaiting approval by a sales executive.');
+      } else {
+        setError(res?.data?.detail || 'Invalid email or password.');
+      }
     } finally {
       setLoading(false);
     }
@@ -120,6 +129,11 @@ export default function LoginPage() {
               {error}
             </Alert>
           )}
+          {pending && (
+            <Alert severity="info" variant="outlined">
+              {pending}
+            </Alert>
+          )}
           <Button
             type="submit"
             variant="contained"
@@ -132,7 +146,18 @@ export default function LoginPage() {
           </Button>
         </Box>
 
-        <Typography sx={{ textAlign: 'center', color: 'text.secondary', fontSize: 11.5, mt: 3 }}>
+        <Typography sx={{ textAlign: 'center', color: 'text.secondary', fontSize: 13, mt: 3 }}>
+          Don't have an account?{' '}
+          <Box
+            component={RouterLink}
+            to="/signup"
+            sx={{ color: LINK_BLUE, fontWeight: 600, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+          >
+            Request access
+          </Box>
+        </Typography>
+
+        <Typography sx={{ textAlign: 'center', color: 'text.secondary', fontSize: 11.5, mt: 1.5 }}>
           Access is limited to authorized Carewell Aviation sales staff.
         </Typography>
       </MotionBox>

@@ -1,12 +1,13 @@
 fastapi==0.115.6
 uvicorn[standard]==0.32.1
-pydantic==2.10.3
+pydantic==2.13.4
 email-validator==2.2.0
 reportlab==4.2.5
 Pillow==12.3.0
 httpx==0.28.1
 python-multipart==0.0.20
 python-dotenv==1.0.1
+supabase==2.31.0
 
 # Optional AI providers (install as needed):
 # openai==1.57.0

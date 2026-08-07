@@ -1,19 +1,20 @@
-"""In-memory customer directory. No database needed for the MVP.
+"""Customer directory, persisted in Supabase.
 
-Records are keyed by a stable generated id (not by email/phone) so a
-salesperson can freely edit contact details without orphaning the record;
-matching an incoming quote to an existing customer is done by scanning for
-a matching email, falling back to phone.
+Records are keyed by a stable generated id (not by email/phone) so contact
+details can be edited freely without orphaning the row; matching an incoming
+quote to an existing customer is done by email, falling back to phone.
 """
 from __future__ import annotations
 
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date
 
+from backend.db import get_client
 from backend.models.schemas import CustomerInfo
 
 DEFAULT_STATUS = "New"
+_TABLE = "customers"
 
 
 @dataclass
@@ -25,24 +26,33 @@ class Customer:
     email: str = ""
     status: str = DEFAULT_STATUS
     quote_count: int = 0
-    # Total business done — the summed grand total of every quote recorded
-    # against this customer, in `currency`.
+    # Total business done — the summed grand total of this customer's quotes,
+    # expressed in `currency`.
     total_value: float = 0.0
     currency: str = "USD"
-    last_quote_date: str = field(default="")
+    last_quote_date: str = ""
 
 
-_store: dict[str, Customer] = {}
+_FIELDS = {f for f in Customer.__dataclass_fields__}
+
+
+def _row_to_customer(row: dict) -> Customer:
+    return Customer(**{k: v for k, v in row.items() if k in _FIELDS})
 
 
 def _find_match(email: str, phone: str) -> Customer | None:
+    client = get_client()
     email_key = email.strip().lower()
     phone_key = phone.strip()
-    for customer in _store.values():
-        if email_key and customer.email.strip().lower() == email_key:
-            return customer
-        if phone_key and customer.phone.strip() == phone_key:
-            return customer
+
+    if email_key:
+        found = client.table(_TABLE).select("*").ilike("email", email_key).limit(1).execute()
+        if found.data:
+            return _row_to_customer(found.data[0])
+    if phone_key:
+        found = client.table(_TABLE).select("*").eq("phone", phone_key).limit(1).execute()
+        if found.data:
+            return _row_to_customer(found.data[0])
     return None
 
 
@@ -52,62 +62,71 @@ def record_quote(info: CustomerInfo, *, total_value: float = 0.0, currency: str 
     if not (info.customer_name.strip() or info.email.strip() or info.phone.strip()):
         return None
 
+    client = get_client()
     today = date.today().isoformat()
     existing = _find_match(info.email, info.phone)
-    if existing:
-        existing.name = info.customer_name or existing.name
-        existing.company = info.company or existing.company
-        existing.phone = info.phone or existing.phone
-        existing.email = info.email or existing.email
-        existing.quote_count += 1
-        # Summing across currencies would be meaningless, so a currency
-        # switch restarts the running total rather than mixing units.
-        if currency != existing.currency:
-            existing.currency = currency
-            existing.total_value = total_value
-        else:
-            existing.total_value += total_value
-        existing.last_quote_date = today
-        return existing
 
-    customer = Customer(
-        id=uuid.uuid4().hex[:10],
-        name=info.customer_name or "Unnamed Client",
-        company=info.company,
-        phone=info.phone,
-        email=info.email,
-        quote_count=1,
-        total_value=total_value,
-        currency=currency,
-        last_quote_date=today,
-    )
-    _store[customer.id] = customer
-    return customer
+    if existing:
+        # Summing across currencies would be meaningless, so a currency switch
+        # restarts the running total rather than mixing units.
+        new_total = total_value if currency != existing.currency else existing.total_value + total_value
+        payload = {
+            "name": info.customer_name or existing.name,
+            "company": info.company or existing.company,
+            "phone": info.phone or existing.phone,
+            "email": info.email or existing.email,
+            "quote_count": existing.quote_count + 1,
+            "total_value": new_total,
+            "currency": currency,
+            "last_quote_date": today,
+        }
+        result = client.table(_TABLE).update(payload).eq("id", existing.id).execute()
+        return _row_to_customer(result.data[0]) if result.data else existing
+
+    payload = {
+        "id": uuid.uuid4().hex[:10],
+        "name": info.customer_name or "Unnamed Client",
+        "company": info.company,
+        "phone": info.phone,
+        "email": info.email,
+        "status": DEFAULT_STATUS,
+        "quote_count": 1,
+        "total_value": total_value,
+        "currency": currency,
+        "last_quote_date": today,
+    }
+    result = client.table(_TABLE).insert(payload).execute()
+    return _row_to_customer(result.data[0])
 
 
 def create_customer(
     *, name: str, company: str = "", phone: str = "", email: str = "", status: str = DEFAULT_STATUS
 ) -> Customer:
     """Adds a customer entered by hand — no quote, so no value or count yet."""
-    customer = Customer(
-        id=uuid.uuid4().hex[:10],
-        name=name.strip() or "Unnamed Client",
-        company=company.strip(),
-        phone=phone.strip(),
-        email=email.strip(),
-        status=status,
-        last_quote_date="",
-    )
-    _store[customer.id] = customer
-    return customer
+    payload = {
+        "id": uuid.uuid4().hex[:10],
+        "name": name.strip() or "Unnamed Client",
+        "company": company.strip(),
+        "phone": phone.strip(),
+        "email": email.strip(),
+        "status": status,
+        "quote_count": 0,
+        "total_value": 0,
+        "currency": "USD",
+        "last_quote_date": "",
+    }
+    result = get_client().table(_TABLE).insert(payload).execute()
+    return _row_to_customer(result.data[0])
 
 
 def get_all_customers() -> list[Customer]:
-    return sorted(_store.values(), key=lambda c: c.last_quote_date, reverse=True)
+    result = get_client().table(_TABLE).select("*").order("last_quote_date", desc=True).execute()
+    return [_row_to_customer(row) for row in result.data or []]
 
 
 def get_customer(customer_id: str) -> Customer | None:
-    return _store.get(customer_id)
+    result = get_client().table(_TABLE).select("*").eq("id", customer_id).limit(1).execute()
+    return _row_to_customer(result.data[0]) if result.data else None
 
 
 def update_customer(
@@ -123,24 +142,28 @@ def update_customer(
     currency: str | None = None,
     last_quote_date: str | None = None,
 ) -> Customer | None:
-    customer = _store.get(customer_id)
-    if customer is None:
-        return None
-    for attr, value in (
-        ("name", name),
-        ("company", company),
-        ("phone", phone),
-        ("email", email),
-        ("status", status),
-        ("quote_count", quote_count),
-        ("total_value", total_value),
-        ("currency", currency),
-        ("last_quote_date", last_quote_date),
-    ):
-        if value is not None:
-            setattr(customer, attr, value)
-    return customer
+    payload = {
+        key: value
+        for key, value in (
+            ("name", name),
+            ("company", company),
+            ("phone", phone),
+            ("email", email),
+            ("status", status),
+            ("quote_count", quote_count),
+            ("total_value", total_value),
+            ("currency", currency),
+            ("last_quote_date", last_quote_date),
+        )
+        if value is not None
+    }
+    if not payload:
+        return get_customer(customer_id)
+
+    result = get_client().table(_TABLE).update(payload).eq("id", customer_id).execute()
+    return _row_to_customer(result.data[0]) if result.data else None
 
 
 def delete_customer(customer_id: str) -> bool:
-    return _store.pop(customer_id, None) is not None
+    result = get_client().table(_TABLE).delete().eq("id", customer_id).execute()
+    return bool(result.data)

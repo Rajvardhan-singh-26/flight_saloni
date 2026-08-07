@@ -140,6 +140,33 @@ class LoginResponse(BaseModel):
     name: str
     email: str
     role: str = "sales"
+    post: str = ""
+
+
+class SignupRequest(BaseModel):
+    name: str = Field(..., min_length=1)
+    post: str = ""
+    email: EmailStr
+    password: str = Field(..., min_length=8)
+
+
+class SignupResponse(BaseModel):
+    """Signup never logs the user in — an admin has to approve them first."""
+    email: str
+    pending_approval: bool = True
+    message: str = "Your account is awaiting approval by a sales executive."
+
+
+class UserProfile(BaseModel):
+    id: str
+    email: str
+    name: str = ""
+    post: str = ""
+    role: str = "sales"
+    approved: bool = False
+    created_at: str = ""
+    approved_at: Optional[str] = None
+    approved_by: Optional[str] = None
 
 
 class CustomerRecord(BaseModel):

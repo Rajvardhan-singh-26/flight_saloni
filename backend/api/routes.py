@@ -2,10 +2,8 @@
 from __future__ import annotations
 
 import io
-import uuid
-from pathlib import Path
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Header, HTTPException, UploadFile
 from fastapi.responses import Response
 from PIL import Image as PILImage
 
@@ -25,11 +23,23 @@ from backend.models.schemas import (
     LoginResponse,
     PricingBreakdown,
     QuoteRequest,
+    SignupRequest,
+    SignupResponse,
+    UserProfile,
 )
-from backend.services.auth import authenticate
+from backend.services.auth import (
+    AuthError,
+    authenticate,
+    delete_profile,
+    get_session,
+    list_profiles,
+    set_approval,
+    sign_up,
+)
 from backend.pdf.generator import generate_quote_pdf
 from backend.services.aircraft_service import create_aircraft, get_aircraft_by_id, get_all_aircraft, update_aircraft
 from backend.services.ai_extraction import extract_charter_details
+from backend.services.image_store import save_aircraft_image
 from backend.services.customer_store import (
     create_customer,
     delete_customer,
@@ -45,15 +55,78 @@ router = APIRouter()
 MAX_GALLERY_IMAGES = 4
 MAX_UPLOAD_BYTES = 5 * 1024 * 1024
 ALLOWED_IMAGE_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
-GALLERY_DIR = Path(__file__).resolve().parent.parent.parent / "frontend" / "public" / "aircraft" / "gallery"
+
+
+def require_admin(authorization: str = Header(default="")) -> dict:
+    """Guards the approval endpoints — only an approved admin may manage users."""
+    token = authorization.removeprefix("Bearer ").strip()
+    session = get_session(token) if token else None
+    if not session:
+        raise HTTPException(status_code=401, detail="Sign in to continue")
+    if session.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Only a sales executive can manage approvals")
+    return session
 
 
 @router.post("/auth/login", response_model=LoginResponse)
 def login(payload: LoginRequest) -> LoginResponse:
-    session = authenticate(payload.email, payload.password)
-    if not session:
-        raise HTTPException(status_code=401, detail="Invalid email or password")
-    return session
+    try:
+        return authenticate(payload.email, payload.password)
+    except AuthError as exc:
+        # 403 for "waiting on approval" so the UI can tell it apart from a
+        # plain bad-credentials 401 and show the right message.
+        raise HTTPException(status_code=403 if exc.pending else 401, detail=exc.message) from exc
+
+
+@router.post("/auth/signup", response_model=SignupResponse)
+def signup(payload: SignupRequest) -> SignupResponse:
+    try:
+        sign_up(
+            name=payload.name,
+            post=payload.post,
+            email=str(payload.email),
+            password=payload.password,
+        )
+    except AuthError as exc:
+        raise HTTPException(status_code=400, detail=exc.message) from exc
+    return SignupResponse(email=str(payload.email))
+
+
+@router.get("/auth/users", response_model=list[UserProfile])
+def list_users(pending_only: bool = False, _admin: dict = Depends(require_admin)) -> list[UserProfile]:
+    return list_profiles(pending_only=pending_only)
+
+
+@router.post("/auth/users/{user_id}/approve", response_model=UserProfile)
+def approve_user(user_id: str, admin: dict = Depends(require_admin)) -> UserProfile:
+    updated = set_approval(user_id, approved=True, approved_by=admin["email"])
+    if not updated:
+        raise HTTPException(status_code=404, detail="User not found")
+    return updated
+
+
+@router.post("/auth/users/{user_id}/revoke", response_model=UserProfile)
+def revoke_user(user_id: str, admin: dict = Depends(require_admin)) -> UserProfile:
+    if admin.get("email") and admin["email"] == _email_of(user_id):
+        raise HTTPException(status_code=400, detail="You cannot revoke your own access")
+    updated = set_approval(user_id, approved=False, approved_by=admin["email"])
+    if not updated:
+        raise HTTPException(status_code=404, detail="User not found")
+    return updated
+
+
+@router.delete("/auth/users/{user_id}", status_code=204)
+def reject_user(user_id: str, admin: dict = Depends(require_admin)) -> Response:
+    if admin.get("email") and admin["email"] == _email_of(user_id):
+        raise HTTPException(status_code=400, detail="You cannot delete your own account")
+    if not delete_profile(user_id):
+        raise HTTPException(status_code=404, detail="User not found")
+    return Response(status_code=204)
+
+
+def _email_of(user_id: str) -> str | None:
+    """Used to stop an admin locking themselves out."""
+    return next((p.email for p in list_profiles() if p.id == user_id), None)
 
 
 @router.get("/aircraft", response_model=list[Aircraft])
@@ -118,16 +191,17 @@ async def upload_aircraft_image(aircraft_id: str, file: UploadFile = File(...)) 
     except Exception:
         raise HTTPException(status_code=400, detail="Uploaded file is not a valid image")
 
-    # Downsize before saving so gallery photos stay small on disk and in the PDF.
+    # Downsize before saving so gallery photos stay small in storage and in the PDF.
     image.thumbnail((1600, 1600))
     buf = io.BytesIO()
     image.save(buf, format="JPEG", quality=85)
 
-    GALLERY_DIR.mkdir(parents=True, exist_ok=True)
-    filename = f"{aircraft_id}-{uuid.uuid4().hex[:8]}.jpg"
-    (GALLERY_DIR / filename).write_bytes(buf.getvalue())
+    try:
+        path = save_aircraft_image(aircraft_id, buf.getvalue())
+    except Exception as exc:  # noqa: BLE001 - surfaced as a clean 502
+        raise HTTPException(status_code=502, detail="Could not store the uploaded image") from exc
 
-    return AircraftImageUploadResponse(path=f"/aircraft/gallery/{filename}")
+    return AircraftImageUploadResponse(path=path)
 
 
 @router.post("/ai/extract", response_model=AIExtractionResult)

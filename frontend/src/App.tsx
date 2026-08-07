@@ -5,6 +5,12 @@ import QuoteGeneratorPage from './pages/QuoteGeneratorPage';
 import AircraftDetailsPage from './pages/AircraftDetailsPage';
 import AircraftPage from './pages/AircraftPage';
 import CustomersPage from './pages/CustomersPage';
+import SignupPage from './pages/SignupPage';
+import TeamPage from './pages/TeamPage';
+import ComingSoonPage from './pages/ComingSoonPage';
+import GridViewOutlinedIcon from '@mui/icons-material/GridViewOutlined';
+import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import { getSession } from './api/client';
 
 /** Redirects to the sales login when no session exists, remembering where
@@ -26,6 +32,7 @@ function AppRoutes() {
       <Routes location={backgroundLocation ?? location}>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
         <Route
           path="/quote"
           element={
@@ -57,6 +64,68 @@ function AppRoutes() {
           element={
             <RequireAuth>
               <CustomersPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/team"
+          element={
+            <RequireAuth>
+              <TeamPage />
+            </RequireAuth>
+          }
+        />
+
+        {/* Sections that are navigable but not built yet — placeholders so the
+         * sidebar never leads to a dead end. */}
+        <Route
+          path="/dashboard"
+          element={
+            <RequireAuth>
+              <ComingSoonPage
+                title="Dashboard"
+                icon={<GridViewOutlinedIcon />}
+                description="An at-a-glance view of your charter business — quotations issued, conversion rate and revenue over time."
+                planned={[
+                  'Quotes issued and accepted this month',
+                  'Revenue by aircraft category',
+                  'Most requested routes and customers',
+                ]}
+              />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/previous-quotes"
+          element={
+            <RequireAuth>
+              <ComingSoonPage
+                title="Previous Quotes"
+                icon={<DescriptionOutlinedIcon />}
+                description="Every quotation you've generated, searchable and re-openable. Quotes are already being saved — this page will surface them."
+                planned={[
+                  'Search by client, route or quote reference',
+                  'Re-download or re-share any past PDF',
+                  'Duplicate a quote as the basis for a new one',
+                ]}
+              />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <RequireAuth>
+              <ComingSoonPage
+                title="Settings"
+                icon={<SettingsOutlinedIcon />}
+                description="Company branding, default charges and quotation defaults, all editable without touching configuration files."
+                planned={[
+                  'Company logo, contact details and footer text',
+                  'Default landing, handling and fuel charges',
+                  'Default currency, tax rate and terms & conditions',
+                ]}
+              />
             </RequireAuth>
           }
         />

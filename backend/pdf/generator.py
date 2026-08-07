@@ -34,6 +34,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
 from backend.models.schemas import Aircraft, PricingBreakdown, QuoteRequest
+from backend.paths import STATIC_DIR
 
 NAVY = colors.HexColor("#122441")
 NAVY_DEEP = colors.HexColor("#0b1730")
@@ -46,8 +47,10 @@ INK = colors.HexColor("#1a2233")
 PAGE_W, PAGE_H = A4
 MARGIN = 16 * mm
 
-# Aircraft photos live in the frontend's public folder so both apps share them.
-PHOTO_DIR = Path(__file__).resolve().parent.parent.parent / "frontend" / "public"
+# Resolves to frontend/public in dev, frontend/dist in a production deploy —
+# whichever one is actually being served — so images always exist where this
+# code looks for them. See backend/paths.py.
+PHOTO_DIR = STATIC_DIR
 
 SERIF = "Times-Roman"
 SERIF_BOLD = "Times-Bold"

@@ -38,7 +38,7 @@ import { CustomerCard, FlightCard, PricingCard, SectionCard, TermsCard } from '.
 import QuotePreview from '../components/QuotePreview';
 import PdfViewerDialog from '../components/PdfViewerDialog';
 
-import { addCustomerFromQuote, AIRCRAFT_CHANGED_EVENT, fetchAircraft, generateQuotePdf, getSession } from '../api/client';
+import { addCustomerFromQuote, AIRCRAFT_CHANGED_EVENT, fetchAircraft, generateQuotePdf, getSession, quotePdfUrl } from '../api/client';
 import { formatMoney, usePricing } from '../hooks/usePricing';
 import { DEFAULT_FORM_VALUES, type Aircraft, type AIExtractionResult, type QuoteFormValues } from '../types';
 import { GOLD, NAVY_DEEP, SERIF } from '../theme';
@@ -76,7 +76,7 @@ export default function QuoteGeneratorPage() {
   const displayRef = quoteId || `QT-${new Date().getFullYear()}-DRAFT`;
   // Points at the backend's persisted copy (not the local blob URL, which
   // only exists in this browser tab) so it's a real link others can open.
-  const shareLink = quoteId ? `${window.location.origin}/api/quotes/${quoteId}/pdf` : null;
+  const shareLink = quoteId ? quotePdfUrl(quoteId) : null;
 
   useEffect(() => {
     const loadFleet = (isInitial: boolean) => {

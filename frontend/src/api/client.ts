@@ -1,13 +1,39 @@
 import axios from 'axios';
 import type { Aircraft, AIExtractionResult, Customer, GalleryImage, QuoteFormValues } from '../types';
 
-const api = axios.create({ baseURL: '/api' });
+// In dev, Vite proxies '/api' to the local backend (see vite.config.ts). In
+// production the frontend and backend are separate Render services on
+// different domains, so VITE_API_URL must point at the deployed backend
+// (e.g. https://carewell-backend.onrender.com/api) — set at build time.
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
+const api = axios.create({ baseURL: API_BASE });
+
+/** Absolute, shareable URL for a saved quote's PDF — built from the same API
+ * base axios uses, not window.location.origin, since frontend and backend
+ * are separate domains in production (only same-origin in local dev). */
+export function quotePdfUrl(quoteId: string): string {
+  const base = API_BASE.startsWith('http') ? API_BASE : `${window.location.origin}${API_BASE}`;
+  return `${base}/quotes/${quoteId}/pdf`;
+}
 
 export interface Salesperson {
   token: string;
   name: string;
   email: string;
   role: string;
+  post?: string;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  name: string;
+  post: string;
+  role: string;
+  approved: boolean;
+  created_at: string;
+  approved_at?: string | null;
+  approved_by?: string | null;
 }
 
 const SESSION_KEY = 'carewell.salesperson';
@@ -15,6 +41,16 @@ const SESSION_KEY = 'carewell.salesperson';
 export async function login(email: string, password: string): Promise<Salesperson> {
   const { data } = await api.post<Salesperson>('/auth/login', { email, password });
   sessionStorage.setItem(SESSION_KEY, JSON.stringify(data));
+  return data;
+}
+
+export async function signup(payload: {
+  name: string;
+  post: string;
+  email: string;
+  password: string;
+}): Promise<{ email: string; pending_approval: boolean; message: string }> {
+  const { data } = await api.post('/auth/signup', payload);
   return data;
 }
 
@@ -30,6 +66,34 @@ export function getSession(): Salesperson | null {
 
 export function logout(): void {
   sessionStorage.removeItem(SESSION_KEY);
+}
+
+/** Admin-only user management — the backend checks the bearer token's role. */
+function authHeader() {
+  const token = getSession()?.token;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+export async function fetchUsers(pendingOnly = false): Promise<UserProfile[]> {
+  const { data } = await api.get<UserProfile[]>('/auth/users', {
+    params: { pending_only: pendingOnly },
+    headers: authHeader(),
+  });
+  return data;
+}
+
+export async function approveUser(id: string): Promise<UserProfile> {
+  const { data } = await api.post<UserProfile>(`/auth/users/${id}/approve`, null, { headers: authHeader() });
+  return data;
+}
+
+export async function revokeUser(id: string): Promise<UserProfile> {
+  const { data } = await api.post<UserProfile>(`/auth/users/${id}/revoke`, null, { headers: authHeader() });
+  return data;
+}
+
+export async function rejectUser(id: string): Promise<void> {
+  await api.delete(`/auth/users/${id}`, { headers: authHeader() });
 }
 
 export async function fetchAircraft(): Promise<Aircraft[]> {

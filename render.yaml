@@ -1,0 +1,40 @@
+# Render blueprint for the Carewell Aviation backend.
+# The frontend deploys separately on Vercel.
+#
+# Render can pick this up automatically (New → Blueprint), or you can create
+# the service by hand using the build/start commands below.
+services:
+  - type: web
+    name: carewell-api
+    runtime: python
+    plan: free
+    region: singapore # closest to the demo's users; change if you prefer
+    buildCommand: pip install -r backend/requirements.txt
+    # $PORT is provided by Render; binding to it is required or the deploy fails.
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12"
+      # Secrets are left unset here on purpose — add them in the Render
+      # dashboard (Environment) so they never live in the repo.
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SALES_EMAIL
+        sync: false
+      - key: SALES_PASSWORD
+        sync: false
+      - key: SALES_NAME
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENROUTER_MODEL
+        sync: false
+      - key: LLM_PROVIDER
+        sync: false
+      # Comma-separated list of allowed frontend origins, e.g.
+      #   https://carewell.vercel.app
+      - key: CORS_ORIGINS
+        sync: false
