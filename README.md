@@ -58,20 +58,6 @@ setup is needed in dev.
    instantly.
 5. **Generate Quote** → embedded PDF viewer → **Download** or **Print**.
 
-## Environment (.env)
-
-All secrets live in `backend/.env` (never committed — see `.gitignore`).
-Copy `backend/.env.example` and fill in:
-
-```env
-SALES_EMAIL=sales@carewellaviation.com   # salesperson login
-SALES_PASSWORD=carewell123
-SALES_NAME=Sales Executive
-
-OPENROUTER_API_KEY=sk-or-...             # enables real AI extraction
-OPENROUTER_MODEL=openai/gpt-4o-mini
-LLM_PROVIDER=                            # empty = auto
-```
 
 ## AI Provider Configuration
 
